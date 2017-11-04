@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.levylin.study_ffmpeg.MainActivity">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="click2transform"
+        android:text="格式转换" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="click2play_video"
+        android:text="点击播放视频" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="click2play_audio"
+        android:text="点击播放音频" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="click2play_audio_by_opensles"
+        android:text="点击播放音频(OPENSLES)" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="click2stop_audio_by_opensles"
+        android:text="点击停止音频(OPENSLES)" />
+
+    <Button
+        android:onClick="openTv"
+        android:text="打开电视台"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <Button
+        android:text="打开主播端"
+        android:onClick="open_zhubo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <com.levylin.study_ffmpeg.VideoView
+        android:id="@+id/videoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</LinearLayout>
