@@ -13,7 +13,7 @@ extern "C" {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_levylin_study_1ffmpeg_ZhuBo_test(JNIEnv *env, jobject instance) {
+Java_com_levylin_study_ffmpeg_ZhuBo_test(JNIEnv *env, jobject instance) {
 
     LOGE("ZhuBo test");
     x264_picture_t *pic;

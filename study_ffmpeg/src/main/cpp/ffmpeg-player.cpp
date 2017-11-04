@@ -34,7 +34,7 @@ void bqPlayCallback(SLAndroidSimpleBufferQueueItf queueItf, void *context) {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_levylin_study_1ffmpeg_OpenSLESPlayer_shutdown(JNIEnv *env, jobject instance) {
+Java_com_levylin_study_ffmpeg_OpenSLESPlayer_shutdown(JNIEnv *env, jobject instance) {
     // destroy buffer queue audio player object, and invalidate all associated interfaces
     if (bqPlayerObject != NULL) {
         (*bqPlayerObject)->Destroy(bqPlayerObject);
@@ -62,7 +62,7 @@ Java_com_levylin_study_1ffmpeg_OpenSLESPlayer_shutdown(JNIEnv *env, jobject inst
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_levylin_study_1ffmpeg_OpenSLESPlayer_play(JNIEnv *env, jobject instance, jstring path_) {
+Java_com_levylin_study_ffmpeg_OpenSLESPlayer_play(JNIEnv *env, jobject instance, jstring path_) {
     const char *path = env->GetStringUTFChars(path_, 0);
 
     LOGE("初始化引擎");

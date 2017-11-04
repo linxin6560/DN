@@ -120,7 +120,7 @@ void *proccess(void *args) {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_levylin_study_1ffmpeg_TVPlayer_play(JNIEnv *env, jobject instance, jstring path_) {
+Java_com_levylin_study_ffmpeg_TVPlayer_play(JNIEnv *env, jobject instance, jstring path_) {
     path = env->GetStringUTFChars(path_, 0);
 
     audio = new FFMpegAudio;
@@ -136,7 +136,7 @@ Java_com_levylin_study_1ffmpeg_TVPlayer_play(JNIEnv *env, jobject instance, jstr
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_levylin_study_1ffmpeg_TVPlayer_stop(JNIEnv *env, jobject instance) {
+Java_com_levylin_study_ffmpeg_TVPlayer_stop(JNIEnv *env, jobject instance) {
     if (isPlay) {
         isPlay = 0;
         pthread_join(p_tid, 0);
@@ -159,7 +159,7 @@ Java_com_levylin_study_1ffmpeg_TVPlayer_stop(JNIEnv *env, jobject instance) {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_levylin_study_1ffmpeg_TVPlayer_display(JNIEnv *env, jobject instance, jobject surface) {
+Java_com_levylin_study_ffmpeg_TVPlayer_display(JNIEnv *env, jobject instance, jobject surface) {
 
     if (window) {
         ANativeWindow_release(window);

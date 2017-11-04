@@ -5,8 +5,8 @@
 
 extern "C" {
 JNIEXPORT void JNICALL
-Java_com_levylin_study_1ffmpeg_MainActivity_transform(JNIEnv *env, jclass type, jstring input_,
-                                                      jstring output_) {
+Java_com_levylin_study_ffmpeg_MainActivity_transform(JNIEnv *env, jclass type, jstring input_,
+                                                     jstring output_) {
     const char *input = env->GetStringUTFChars(input_, 0);
     const char *output = env->GetStringUTFChars(output_, 0);
     LOGE("input=%s", input);
@@ -64,8 +64,8 @@ Java_com_levylin_study_1ffmpeg_MainActivity_transform(JNIEnv *env, jclass type, 
 }
 
 JNIEXPORT void JNICALL
-Java_com_levylin_study_1ffmpeg_VideoView_render(JNIEnv *env, jobject instance, jstring input_,
-                                                jobject surface) {
+Java_com_levylin_study_ffmpeg_VideoView_render(JNIEnv *env, jobject instance, jstring input_,
+                                               jobject surface) {
     const char *input = env->GetStringUTFChars(input_, 0);
     av_register_all();//ffmpeg代码必须调用
     avformat_network_init();
@@ -109,8 +109,8 @@ Java_com_levylin_study_1ffmpeg_VideoView_render(JNIEnv *env, jobject instance, j
         LOGE("播放视频:%d", got_video_frame);
         if (got_video_frame > 0) {
             sws_scale(swsContext, (const uint8_t *const *) videoFrame->data,
-                                             videoFrame->linesize, 0,
-                                             videoFrame->height, rgbFrame->data, rgbFrame->linesize);
+                      videoFrame->linesize, 0,
+                      videoFrame->height, rgbFrame->data, rgbFrame->linesize);
             //绘制之前配置一些信息：宽高，格式
             ANativeWindow_setBuffersGeometry(nativeWindow, videoContext->width,
                                              videoContext->height, WINDOW_FORMAT_RGBA_8888);
@@ -144,7 +144,7 @@ Java_com_levylin_study_1ffmpeg_VideoView_render(JNIEnv *env, jobject instance, j
 }
 
 JNIEXPORT void JNICALL
-Java_com_levylin_study_1ffmpeg_MusicPlayer_sound(JNIEnv *env, jobject instance, jstring input_) {
+Java_com_levylin_study_ffmpeg_MusicPlayer_sound(JNIEnv *env, jobject instance, jstring input_) {
     const char *input = env->GetStringUTFChars(input_, 0);
     av_register_all();//ffmpeg代码必须调用
     AVFormatContext *formatContext;
@@ -211,7 +211,7 @@ Java_com_levylin_study_1ffmpeg_MusicPlayer_sound(JNIEnv *env, jobject instance, 
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_levylin_study_1ffmpeg_MainActivity_stringFromJNI(
+Java_com_levylin_study_ffmpeg_MainActivity_stringFromJNI(
         JNIEnv *env,
         jobject /* this */) {
     std::string hello = "Hello from C++";
