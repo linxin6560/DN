@@ -37,7 +37,6 @@ public class VideoPusher implements Camera.PreviewCallback, SurfaceHolder.Callba
     private byte[] raw;
     private Camera camera;
     private PushNative pushNative;
-    private LiveStateChangeListener mListener;
 
     public VideoPusher(Activity activity, SurfaceHolder holder, PushNative pushNative) {
         this.activity = activity;
@@ -262,9 +261,5 @@ public class VideoPusher implements Camera.PreviewCallback, SurfaceHolder.Callba
     @Override
     public void release() {
         stopPreview();
-    }
-
-    public void setLiveStateChangeListener(LiveStateChangeListener liveStateChangeListener) {
-        this.mListener = liveStateChangeListener;
     }
 }

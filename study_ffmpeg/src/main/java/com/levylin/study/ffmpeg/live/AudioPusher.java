@@ -17,7 +17,6 @@ public class AudioPusher implements IPusher {
     private int minBufferSize;
     private boolean isPushing;
     private PushNative pushNative;
-    private LiveStateChangeListener mListener;
 
     public AudioPusher(PushNative pushNative) {
         this.pushNative = pushNative;
@@ -25,12 +24,13 @@ public class AudioPusher implements IPusher {
         int channelConfig = param.getChannel() == 1 ? AudioFormat.CHANNEL_IN_MONO : AudioFormat.CHANNEL_IN_STEREO;
         minBufferSize = AudioRecord.getMinBufferSize(param.getSampleRateInHz(), channelConfig, AudioFormat.ENCODING_PCM_16BIT);
         audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, param.getSampleRateInHz(), channelConfig, AudioFormat.ENCODING_PCM_16BIT, minBufferSize);
+        pushNative.setAudioOptions(param.getSampleRateInHz(), param.getChannel());
     }
 
     @Override
     public void startPush() {
         isPushing = true;
-//        new Thread(new AudioRecordTask()).start();
+        new Thread(new AudioRecordTask()).start();
     }
 
     @Override
@@ -43,10 +43,6 @@ public class AudioPusher implements IPusher {
 
     }
 
-    public void setLiveStateChangeListener(LiveStateChangeListener liveStateChangeListener) {
-        this.mListener = liveStateChangeListener;
-    }
-
     private class AudioRecordTask implements Runnable {
         @Override
         public void run() {
@@ -54,8 +50,9 @@ public class AudioPusher implements IPusher {
             while (isPushing) {
                 byte[] buffer = new byte[minBufferSize];
                 int len = audioRecord.read(buffer, 0, buffer.length);
+                LogUtils.e("读取音频数据:len=" + len);
                 if (len > 0) {
-                    LogUtils.e("读取音频数据");
+                    pushNative.pushAudio(buffer);
                 }
             }
         }

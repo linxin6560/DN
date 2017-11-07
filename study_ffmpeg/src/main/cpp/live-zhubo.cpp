@@ -7,6 +7,7 @@
 #include <queue>
 #include <pthread.h>
 
+#include "libfaac/faac.h"
 #include "libx264/x264.h"
 #include "librtmp/rtmp.h"
 #include "librtmp/rtmp_sys.h"
@@ -16,7 +17,14 @@ pthread_cond_t cond;
 using namespace std;
 queue<RTMPPacket *> rtmp_queue;
 int isPushing;
+/**
+ * 	音频编码相关
+ */
+faacEncHandle audioEncHandle = NULL;
+unsigned long nInputSamples;
+unsigned long nMaxOutputBytes;
 
+//视频编码相关
 x264_picture_t *pic_in;
 x264_picture_t *pic_out;
 int y_len;
@@ -26,11 +34,80 @@ x264_t *video_encoder;
 long start_time;
 char *rtmp_path;
 
-void add_264_sequence_header(unsigned char sps[100], unsigned char pps[100], int len, int pps_len);
+void add_rtmp_packet(RTMPPacket *pPacket) {
+    pthread_mutex_lock(&mutex);
+    if (isPushing) {
+        rtmp_queue.push(pPacket);
+    }
+    pthread_cond_signal(&cond);
+    pthread_mutex_unlock(&mutex);
+}
 
-void add_rtmp_packet(RTMPPacket *pPacket);
+RTMPPacket *get_rtmp_packet() {
+    pthread_mutex_lock(&mutex);
+    if (rtmp_queue.empty()) {
+        pthread_cond_wait(&cond, &mutex);
+    }
+    RTMPPacket *packet = rtmp_queue.front();
+    rtmp_queue.pop();
+    pthread_mutex_unlock(&mutex);
+    LOGE("获取到一个RTMP包");
+    return packet;
+}
 
-void add_264_body(uint8_t *payload, int i_payload);
+/**
+ * 添加acc头部
+ */
+void add_acc_sequence_header() {
+    if (!audioEncHandle) {
+        LOGE("打开音频编码器失败");
+        return;
+    }
+    unsigned char *buf;
+    unsigned long len;/*buf长度,一般是2*/
+    faacEncGetDecoderSpecificInfo(audioEncHandle, &buf, &len);
+    RTMPPacket *packet = (RTMPPacket *) malloc(sizeof(RTMPPacket));
+    RTMPPacket_Alloc(packet, len + 2);
+    RTMPPacket_Reset(packet);
+    unsigned char *body = (unsigned char *) packet->m_body;
+    /*AF 00 + AAC RAW data*/
+    body[0] = 0xAF;
+    body[1] = 0x00;
+    memcpy(&body[2], buf, len); /*spec_buf是AAC sequence header数据*/
+
+    packet->m_packetType = RTMP_PACKET_TYPE_AUDIO;
+    packet->m_nBodySize = len + 2;
+    packet->m_nChannel = 0x04;
+    packet->m_nTimeStamp = 0;
+    packet->m_hasAbsTimestamp = 0;
+    packet->m_headerType = RTMP_PACKET_SIZE_LARGE;
+    LOGE("插入一个音频头部包");
+    add_rtmp_packet(packet);
+}
+
+/**
+ * 添加音频body
+ * @param buffer
+ * @param length
+ */
+void add_acc_body(unsigned char *buffer, int length) {
+    int body_size = length + 2;
+    RTMPPacket *packet = (RTMPPacket *) malloc(sizeof(RTMPPacket));
+    RTMPPacket_Alloc(packet, body_size);
+    RTMPPacket_Reset(packet);
+    char *body = packet->m_body;
+    body[0] = 0xAF;
+    body[1] = 0x01;
+    memcpy(&body[2], buffer, length);
+    packet->m_packetType = RTMP_PACKET_TYPE_AUDIO;
+    packet->m_headerType = RTMP_PACKET_SIZE_MEDIUM;
+    packet->m_nBodySize = body_size;
+    packet->m_nChannel = 0x04;
+    packet->m_nTimeStamp = RTMP_GetTime() - start_time;
+    packet->m_hasAbsTimestamp = 0;
+    LOGE("插入一个音频普通包");
+    add_rtmp_packet(packet);
+}
 
 /**
  * 发送头信息
@@ -79,6 +156,7 @@ void add_264_sequence_header(unsigned char *sps, unsigned char *pps, int sps_len
     packet->m_nTimeStamp = 0;
     packet->m_hasAbsTimestamp = 0;
     packet->m_headerType = RTMP_PACKET_SIZE_MEDIUM;//注意不要写成RTMP_PACKET_SIZE_MINIMUM，否则会崩溃
+    LOGE("插入一个视频头部包");
     add_rtmp_packet(packet);
 }
 
@@ -120,29 +198,8 @@ void add_264_body(uint8_t *buffer, int len) {
     packet->m_hasAbsTimestamp = 0;
     packet->m_nChannel = 0x04;
     packet->m_headerType = RTMP_PACKET_SIZE_LARGE;
+    LOGE("插入一个视频普通包");
     add_rtmp_packet(packet);
-}
-
-void add_rtmp_packet(RTMPPacket *pPacket) {
-    LOGE("插入一个RTMP包");
-    pthread_mutex_lock(&mutex);
-    if (isPushing) {
-        rtmp_queue.push(pPacket);
-    }
-    pthread_cond_signal(&cond);
-    pthread_mutex_unlock(&mutex);
-}
-
-RTMPPacket *get_rtmp_packet() {
-    pthread_mutex_lock(&mutex);
-    if (rtmp_queue.empty()) {
-        pthread_cond_wait(&cond, &mutex);
-    }
-    RTMPPacket *packet = rtmp_queue.front();
-    rtmp_queue.pop();
-    pthread_mutex_unlock(&mutex);
-    LOGE("获取到一个RTMP包");
-    return packet;
 }
 
 void *push_thread(void *data) {
@@ -163,6 +220,8 @@ void *push_thread(void *data) {
         LOGE("RTMP_Connect success");
         RTMP_ConnectStream(rtmp, 0);
         LOGE("RTMP_ConnectStream() success!");
+        //添加音频头部信息
+        add_acc_sequence_header();
         while (isPushing) {
             RTMPPacket *packet = get_rtmp_packet();
             packet->m_nInfoField2 = rtmp->m_stream_id;
@@ -304,4 +363,58 @@ JNIEXPORT void JNICALL
 Java_com_levylin_study_ffmpeg_live_PushNative_stopPush(JNIEnv *env, jobject instance) {
     LOGE("stopPush");
     isPushing = 0;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_levylin_study_ffmpeg_live_PushNative_setAudioOptions(JNIEnv *env, jobject instance,
+                                                              jint sampleRate, jint channel) {
+    if (audioEncHandle) {
+        LOGE("音频解码已打开");
+        return;
+    }
+    audioEncHandle = faacEncOpen(sampleRate, channel, &nInputSamples, &nMaxOutputBytes);
+    if (!audioEncHandle) {
+        LOGE("音频解码打开失败");
+        return;
+    }
+    faacEncConfigurationPtr configurationPtr = faacEncGetCurrentConfiguration(audioEncHandle);
+    configurationPtr->mpegVersion = MPEG4;
+    configurationPtr->aacObjectType = LOW;
+    configurationPtr->allowMidside = TRUE;
+    configurationPtr->outputFormat = FALSE;//输入是否包含ADTS头
+    configurationPtr->useTns = TRUE;//时域噪音控制,大概就是消爆音
+    configurationPtr->useLfe = FALSE;//打开是使用一个通道做低音频通道
+    configurationPtr->inputFormat = FAAC_INPUT_16BIT;
+    configurationPtr->quantqual = 100;
+    configurationPtr->bandWidth = 0; //频宽
+    configurationPtr->shortctl = SHORTCTL_NORMAL;
+    if (!faacEncSetConfiguration(audioEncHandle, configurationPtr)) {
+        LOGE("音频配置失败");
+    }
+    LOGE("音频编码打开完成");
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_levylin_study_ffmpeg_live_PushNative_pushAudio(JNIEnv *env, jobject instance,
+                                                        jbyteArray data_) {
+    jbyte *data = env->GetByteArrayElements(data_, NULL);
+    if (audioEncHandle) {
+        int len = env->GetArrayLength(data_);
+        LOGE("data len=%d", len);
+        //pcm码赚mpeg4
+        unsigned char *byteBuffer = (unsigned char *) malloc(
+                sizeof(unsigned char) * nMaxOutputBytes);
+        LOGE("初始化byteBuffer");
+        int byteLength = faacEncEncode(audioEncHandle, (int32_t *) data, len, byteBuffer,
+                                       nMaxOutputBytes);
+        LOGE("获取声音%d", byteLength);
+        if (byteLength > 0) {
+            add_acc_body(byteBuffer, byteLength);
+        }
+    } else {
+        LOGE("打开音频编码器失败");
+    }
+    env->ReleaseByteArrayElements(data_, data, 0);
 }

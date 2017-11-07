@@ -12,7 +12,6 @@ public class LivePusher {
     private VideoPusher videoPusher;
     private AudioPusher audioPusher;
     private PushNative mNative;
-    private LiveStateChangeListener mListener;
     private Activity activity;
     private boolean isPushing = false;
 
@@ -24,8 +23,6 @@ public class LivePusher {
     public void prepare(SurfaceHolder holder) {
         videoPusher = new VideoPusher(activity, holder, mNative);
         audioPusher = new AudioPusher(mNative);
-        videoPusher.setLiveStateChangeListener(mListener);
-        audioPusher.setLiveStateChangeListener(mListener);
     }
 
 
@@ -49,9 +46,6 @@ public class LivePusher {
 
     public void relase() {
         stopPusher();
-        videoPusher.setLiveStateChangeListener(null);
-        audioPusher.setLiveStateChangeListener(null);
-        mNative.setLiveStateChangeListener(null);
         videoPusher.release();
         audioPusher.release();
         mNative.release();
@@ -59,17 +53,5 @@ public class LivePusher {
 
     public boolean isPushing() {
         return isPushing;
-    }
-
-    public void setLiveStateChangeListener(LiveStateChangeListener listener) {
-        mListener = listener;
-        mNative.setLiveStateChangeListener(listener);
-        if (null != videoPusher) {
-            videoPusher.setLiveStateChangeListener(listener);
-        }
-        if (null != audioPusher) {
-            audioPusher.setLiveStateChangeListener(listener);
-        }
-
     }
 }
