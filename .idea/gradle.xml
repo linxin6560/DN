@@ -10,6 +10,9 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/aop" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/app-skin" />
+            <option value="$PROJECT_DIR$/skin-core" />
+            <option value="$PROJECT_DIR$/skin_demo" />
             <option value="$PROJECT_DIR$/study_ffmpeg" />
           </set>
         </option>

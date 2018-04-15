@@ -5,6 +5,10 @@
       <module fileurl="file://$PROJECT_DIR$/DN.iml" filepath="$PROJECT_DIR$/DN.iml" />
       <module fileurl="file://$PROJECT_DIR$/aop/aop.iml" filepath="$PROJECT_DIR$/aop/aop.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app-skin/app-skin.iml" filepath="$PROJECT_DIR$/app-skin/app-skin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/skin-core/skin-core.iml" filepath="$PROJECT_DIR$/skin-core/skin-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/skin_demo/skin_demo.iml" filepath="$PROJECT_DIR$/skin_demo/skin_demo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/skin_demo/skin_manager.iml" filepath="$PROJECT_DIR$/skin_demo/skin_manager.iml" />
       <module fileurl="file://$PROJECT_DIR$/study_ffmpeg/study_ffmpeg.iml" filepath="$PROJECT_DIR$/study_ffmpeg/study_ffmpeg.iml" />
     </modules>
   </component>

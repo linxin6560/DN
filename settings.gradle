@@ -1,1 +1,1 @@
-include ':app', ':study_ffmpeg', ':aop'
+include ':app', ':study_ffmpeg', ':aop', ':skin_demo', ':skin-core',':app-skin'
